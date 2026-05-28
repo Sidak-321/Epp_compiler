@@ -1,0 +1,16 @@
+# Compiled binary
+epp
+epp.exe
+
+# Object files (intermediate compilation output)
+*.o
+*.a
+
+# IDE/editor clutter
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# Test output (we don't want generated output committed)
+tests/output_*.txt
