@@ -69,6 +69,8 @@ UnlimitedInt& UnlimitedInt::operator=(const UnlimitedInt& other) {
 UnlimitedInt::~UnlimitedInt() {
     delete[] digits;
 }
+//setters
+void UnlimitedInt::set_sign(int s) { sign = s; }
 
 // ─── GETTERS ─────────────────────────────────────────────────────────────────
 

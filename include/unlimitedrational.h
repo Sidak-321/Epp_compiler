@@ -19,6 +19,8 @@ public:
 
     // Copy constructor
     UnlimitedRational(const UnlimitedRational& other);
+    // Assignment operator
+UnlimitedRational& operator=(const UnlimitedRational& other);
 
     // Destructor
     ~UnlimitedRational();

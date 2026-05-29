@@ -25,11 +25,14 @@ public:
 
     // Destructor — frees the digits array
     ~UnlimitedInt();
+    //setters
+    void set_sign(int s);
 
     // Getters
     int  get_sign()          const;
     int  get_size()          const;
     int* get_digits()        const;
+
 
     // Arithmetic — static: take two pointers, return new pointer
     // Caller is responsible for deleting the returned pointer

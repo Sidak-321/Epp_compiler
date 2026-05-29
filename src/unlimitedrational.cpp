@@ -25,6 +25,15 @@ UnlimitedRational::~UnlimitedRational() {
     delete num;
     delete den;
 }
+// Assignment operator
+UnlimitedRational& UnlimitedRational::operator=(const UnlimitedRational& other) {
+    if (this == &other) return *this;
+    delete num;
+    delete den;
+    num = new UnlimitedInt(*other.num);
+    den = new UnlimitedInt(*other.den);
+    return *this;
+}
 
 // ─── GETTERS ─────────────────────────────────────────────────────────────────
 
@@ -36,34 +45,65 @@ UnlimitedInt* UnlimitedRational::get_den() const { return den; }
 // e.g. 6/4 → gcd(6,4)=2 → 3/2
 
 void UnlimitedRational::simplify() {
+    // If numerator is zero, set to 0/1 and done
     if (num->get_sign() == 0) {
-        // 0/anything = 0/1
         delete den;
         den = new UnlimitedInt(1);
         return;
     }
 
-    UnlimitedInt* g = UnlimitedInt::gcd(num, den);
+    // If denominator is already 1, nothing to simplify
+    if (den->to_string() == "1" || den->to_string() == "-1") {
+        if (den->get_sign() == -1) {
+            // flip sign to numerator
+            UnlimitedInt negOne(-1);
+            UnlimitedInt* newNum = UnlimitedInt::mul(num, &negOne);
+            delete num;
+            num = newNum;
+            delete den;
+            den = new UnlimitedInt(1);
+        }
+        return;
+    }
 
+    // Make copies with positive signs for GCD computation
+    UnlimitedInt posNum(*num);
+    if (posNum.get_sign() == -1) {
+        UnlimitedInt negOne(-1);
+        UnlimitedInt* tmp = UnlimitedInt::mul(&posNum, &negOne);
+        posNum = *tmp;
+        delete tmp;
+    }
+
+    UnlimitedInt posDen(*den);
+    if (posDen.get_sign() == -1) {
+        UnlimitedInt negOne(-1);
+        UnlimitedInt* tmp = UnlimitedInt::mul(&posDen, &negOne);
+        posDen = *tmp;
+        delete tmp;
+    }
+
+    // Compute GCD of absolute values
+    UnlimitedInt* g = UnlimitedInt::gcd(&posNum, &posDen);
+
+    // Divide both by GCD
     UnlimitedInt* newNum = UnlimitedInt::div(num, g);
     UnlimitedInt* newDen = UnlimitedInt::div(den, g);
-
-    // Fix sign: keep sign on numerator, denominator always positive
-    newNum->get_sign();  // sign already correct from div
-    newDen->get_sign();
-
-    delete num;  delete den;  delete g;
+    delete g;
+    delete num;
+    delete den;
     num = newNum;
     den = newDen;
 
-    // Denominator should always be positive
+    // Denominator must always be positive — move sign to numerator
     if (den->get_sign() == -1) {
-        // flip both signs
-        // num sign flip:
-        UnlimitedInt* negNum = UnlimitedInt::mul(num, new UnlimitedInt(-1));
-        UnlimitedInt* negDen = UnlimitedInt::mul(den, new UnlimitedInt(-1));
-        delete num; delete den;
-        num = negNum; den = negDen;
+        UnlimitedInt negOne(-1);
+        UnlimitedInt* fn = UnlimitedInt::mul(num, &negOne);
+        UnlimitedInt* fd = UnlimitedInt::mul(den, &negOne);
+        delete num;
+        delete den;
+        num = fn;
+        den = fd;
     }
 }
 
