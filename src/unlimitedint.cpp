@@ -32,9 +32,27 @@ UnlimitedInt::UnlimitedInt(std::string num) {
 }
 
 // Build from a plain int
+// Build from a plain int
 UnlimitedInt::UnlimitedInt(int num) {
-    // Reuse string constructor
-    *this = UnlimitedInt(std::to_string(num));
+    std::string s = std::to_string(num);
+
+    if (s.empty() || s == "0") {
+        sign = 0; size = 1;
+        digits = new int[1];
+        digits[0] = 0;
+        return;
+    }
+
+    int start = 0;
+    if (s[0] == '-') { sign = -1; start = 1; }
+    else               sign = +1;
+
+    std::string d = s.substr(start);
+    size = d.size();
+    digits = new int[size];
+    for (int i = 0; i < size; i++) {
+        digits[i] = d[size - 1 - i] - '0';
+    }
 }
 
 // Build from raw array (used internally by arithmetic functions)

@@ -1,61 +1,61 @@
-// src/main.cpp — Phase 4 test
+// src/main.cpp — Phase 5 test
 
 #include <iostream>
+#include "minheap.h"
+#include "parser.h"
 #include "symtable.h"
 
 int main() {
-    std::cout << "=== Phase 4: Symbol Table (BST) ===" << std::endl;
 
-    SymTable table;
+    // ── Test 1: MinHeap ───────────────────────────────────────────────────────
+    std::cout << "=== Phase 5: MinHeap ===" << std::endl;
 
-    // ── Insert some variables ─────────────────────────────────────────────────
-    // Simulating: x=10, y=20, z=30, a=5
-    // BST will order them alphabetically: a, x, y, z
+    MinHeap heap(5);  // 5 memory slots: 0,1,2,3,4
+    std::cout << "Initial: "; heap.print();
 
-    UnlimitedRational v10("10", "1");
-    UnlimitedRational v20("20", "1");
-    UnlimitedRational v30("30", "1");
-    UnlimitedRational v5("5",  "1");
+    int s1 = heap.pop();
+    std::cout << "pop() = " << s1 << " | "; heap.print();  // 0
 
-    table.insert("x", &v10, 0);   // x at memory slot 0
-    table.insert("y", &v20, 1);   // y at memory slot 1
-    table.insert("z", &v30, 2);   // z at memory slot 2
-    table.insert("a", &v5,  3);   // a at memory slot 3
+    int s2 = heap.pop();
+    std::cout << "pop() = " << s2 << " | "; heap.print();  // 1
 
-    std::cout << "\nAfter inserting x, y, z, a:" << std::endl;
-    table.print_all(table.search("x") ? nullptr : nullptr);  // trick: use root
-    // Direct print from root:
-    std::cout << "Size = " << table.get_size() << std::endl;
+    heap.push(s1);  // return slot 0
+    std::cout << "push(0)  | "; heap.print();  // 0 back
 
-    // ── Search ────────────────────────────────────────────────────────────────
-    std::cout << "\nSearch for 'y':" << std::endl;
-    SymNode* found = table.search("y");
-    if (found) {
-        std::cout << "  Found: y = " << found->value->to_string()
-                  << " at slot " << found->mem_loc << std::endl;
-    }
+    int s3 = heap.pop();
+    std::cout << "pop() = " << s3 << " | "; heap.print();  // 0 reused
 
-    std::cout << "\nSearch for 'b' (not inserted):" << std::endl;
-    SymNode* notFound = table.search("b");
-    std::cout << (notFound ? "  Found" : "  Not found") << std::endl;
+    // ── Test 2: Parser ────────────────────────────────────────────────────────
+    std::cout << "\n=== Phase 5: Parser ===" << std::endl;
 
-    // ── Remove ────────────────────────────────────────────────────────────────
-    std::cout << "\nRemoving 'x'..." << std::endl;
-    int freed = table.remove("x");
-    std::cout << "  Freed memory slot: " << freed << std::endl;
-    std::cout << "  Size after remove: " << table.get_size() << std::endl;
+    SymTable symtable;
+    MinHeap  heap2(10);
+    Parser   parser(&symtable, &heap2);
 
-    // Search for x after deletion
-    SymNode* afterDel = table.search("x");
-    std::cout << "  Search x after delete: "
-              << (afterDel ? "still there (BUG!)" : "gone (correct)") << std::endl;
+    // Test: x = 3 + 5
+    std::cout << "\nParsing: x = 3 + 5" << std::endl;
+    ExprTreeNode* t1 = parser.parse_line("x = 3 + 5");
+    if (t1) { t1->print(); delete t1; }
 
-    // ── Remove node with two children ─────────────────────────────────────────
-    std::cout << "\nRemoving 'y' (has right child z)..." << std::endl;
-    int freed2 = table.remove("y");
-    std::cout << "  Freed slot: " << freed2 << std::endl;
-    std::cout << "  Size: " << table.get_size() << std::endl;
+    // Test: y = 10
+    std::cout << "\nParsing: y = 10" << std::endl;
+    ExprTreeNode* t2 = parser.parse_line("y = 10");
+    if (t2) { t2->print(); delete t2; }
 
-    std::cout << "\n[EPP] Phase 4 complete." << std::endl;
+    // Test: del x
+    std::cout << "\nParsing: del x" << std::endl;
+    ExprTreeNode* t3 = parser.parse_line("del x");
+    if (t3) { t3->print(); delete t3; }
+
+    // Test: ret y
+    std::cout << "\nParsing: ret y" << std::endl;
+    ExprTreeNode* t4 = parser.parse_line("ret y");
+    if (t4) { t4->print(); delete t4; }
+
+    // Verify heap recycled slot 0 after del x
+    std::cout << "\nHeap after del x: "; heap2.print();
+    std::cout << "SymTable size: " << symtable.get_size() << std::endl;
+
+    std::cout << "\n[EPP] Phase 5 complete." << std::endl;
     return 0;
 }
