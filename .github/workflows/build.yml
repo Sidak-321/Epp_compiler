@@ -1,31 +1,33 @@
-# .github/workflows/build.yml
-# This file tells GitHub Actions what to do on every push
-
-name: Build EPP Compiler   # Name shown on GitHub UI
+name: Build EPP Compiler
 
 on:
-  push:                    # Trigger: run on every push
-    branches: [ main ]     # Only on the main branch
+  push:
+    branches: [ main ]
   pull_request:
-    branches: [ main ]     # Also run on pull requests to main
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest   # Use a fresh Ubuntu Linux machine
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Download your code onto the CI machine
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Verify g++ is available (it is on ubuntu-latest by default)
       - name: Install build tools
         run: sudo apt-get install -y g++ make
 
-      # Step 3: Run 'make' — if this fails, the CI turns red
       - name: Build project
         run: make
 
-      # Step 4: Run the binary to verify it executes
-      - name: Smoke test
-        run: ./epp tests/test1.txt tests/output.txt 10
+      - name: Smoke test - compile mode
+        run: |
+          echo "x = 3 + 5" > test_input.txt
+          echo "ret x" >> test_input.txt
+          ./epp compile test_input.txt test_output.txt 10
+
+      - name: Smoke test - run mode
+        run: ./epp run test_input.txt
+
+      - name: Smoke test - help
+        run: ./epp || true
