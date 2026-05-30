@@ -28,4 +28,4 @@ jobs:
 
       # Step 4: Run the binary to verify it executes
       - name: Smoke test
-        run: ./epp
+        run: ./epp tests/test1.txt tests/output.txt 10
