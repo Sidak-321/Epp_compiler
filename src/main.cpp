@@ -1,61 +1,55 @@
-// src/main.cpp — Phase 5 test
+// src/main.cpp — Final CLI
 
 #include <iostream>
-#include "minheap.h"
-#include "parser.h"
-#include "symtable.h"
+#include <fstream>
+#include <vector>
+#include <string>
+#include "eppcompiler.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    // ── Test 1: MinHeap ───────────────────────────────────────────────────────
-    std::cout << "=== Phase 5: MinHeap ===" << std::endl;
+    // ── CLI argument parsing ──────────────────────────────────────────────────
+    if (argc != 4) {
+        std::cout << "Usage: ./epp <input_file> <output_file> <memory_size>"
+                  << std::endl;
+        std::cout << "Example: ./epp program.txt output.txt 10" << std::endl;
+        return 1;
+    }
+    
 
-    MinHeap heap(5);  // 5 memory slots: 0,1,2,3,4
-    std::cout << "Initial: "; heap.print();
+    std::string input_file  = argv[1];
+    std::string output_file = argv[2];
+    int memory_size         = std::stoi(argv[3]);
 
-    int s1 = heap.pop();
-    std::cout << "pop() = " << s1 << " | "; heap.print();  // 0
+    std::cout << "[EPP] Expression Processing Pipeline v1.0" << std::endl;
+    std::cout << "[EPP] Compiling " << input_file << "..." << std::endl;
+    std::cout << "[EPP] Memory limit: " << memory_size << " slots" << std::endl;
 
-    int s2 = heap.pop();
-    std::cout << "pop() = " << s2 << " | "; heap.print();  // 1
+    // ── Read input file ───────────────────────────────────────────────────────
+    std::ifstream infile(input_file);
+    if (!infile.is_open()) {
+        std::cerr << "[EPP] Error: cannot open " << input_file << std::endl;
+        return 1;
+    }
 
-    heap.push(s1);  // return slot 0
-    std::cout << "push(0)  | "; heap.print();  // 0 back
+    std::vector<std::string> lines;
+    std::string line;
+    while (std::getline(infile, line)) {
+        if (!line.empty()) lines.push_back(line);
+    }
+    infile.close();
 
-    int s3 = heap.pop();
-    std::cout << "pop() = " << s3 << " | "; heap.print();  // 0 reused
+    // ── Compile ───────────────────────────────────────────────────────────────
+    try {
+        EPPCompiler compiler(memory_size, output_file);
+        compiler.compile(lines);
+        compiler.print_instructions();
+        compiler.write_to_file(output_file);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "[EPP] Error: " << e.what() << std::endl;
+        return 1;
+    }
 
-    // ── Test 2: Parser ────────────────────────────────────────────────────────
-    std::cout << "\n=== Phase 5: Parser ===" << std::endl;
-
-    SymTable symtable;
-    MinHeap  heap2(10);
-    Parser   parser(&symtable, &heap2);
-
-    // Test: x = 3 + 5
-    std::cout << "\nParsing: x = 3 + 5" << std::endl;
-    ExprTreeNode* t1 = parser.parse_line("x = 3 + 5");
-    if (t1) { t1->print(); delete t1; }
-
-    // Test: y = 10
-    std::cout << "\nParsing: y = 10" << std::endl;
-    ExprTreeNode* t2 = parser.parse_line("y = 10");
-    if (t2) { t2->print(); delete t2; }
-
-    // Test: del x
-    std::cout << "\nParsing: del x" << std::endl;
-    ExprTreeNode* t3 = parser.parse_line("del x");
-    if (t3) { t3->print(); delete t3; }
-
-    // Test: ret y
-    std::cout << "\nParsing: ret y" << std::endl;
-    ExprTreeNode* t4 = parser.parse_line("ret y");
-    if (t4) { t4->print(); delete t4; }
-
-    // Verify heap recycled slot 0 after del x
-    std::cout << "\nHeap after del x: "; heap2.print();
-    std::cout << "SymTable size: " << symtable.get_size() << std::endl;
-
-    std::cout << "\n[EPP] Phase 5 complete." << std::endl;
     return 0;
 }
