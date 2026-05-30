@@ -44,8 +44,7 @@ UnlimitedInt* UnlimitedRational::get_num() const { return num; }
 UnlimitedInt* UnlimitedRational::get_den() const { return den; }
 
 // ─── SIMPLIFY ────────────────────────────────────────────────────────────────
-
-void UnlimitedRational::simplify() {
+  void UnlimitedRational::simplify() {
     // Case 1: numerator is zero → 0/1
     if (num->get_sign() == 0) {
         delete den;
@@ -53,60 +52,49 @@ void UnlimitedRational::simplify() {
         return;
     }
 
-    // Case 2: denominator is 1 → already simplified
+    // Case 2: denominator is already 1 → nothing to do
     if (den->to_string() == "1") return;
 
-    // Case 3: use plain long long GCD — safe, no UnlimitedInt recursion
-    std::string ns = num->to_string();
-    std::string ds = den->to_string();
+    // Case 3: use our own UnlimitedInt GCD — works for any size number
+    // Make positive copies for GCD computation
+    UnlimitedInt posNum(*num);
+    posNum.set_sign(1);
 
-    // Strip negative signs for length check
-    bool numNeg = (!ns.empty() && ns[0] == '-');
-    bool denNeg = (!ds.empty() && ds[0] == '-');
-    std::string nsAbs = numNeg ? ns.substr(1) : ns;
-    std::string dsAbs = denNeg ? ds.substr(1) : ds;
+    UnlimitedInt posDen(*den);
+    posDen.set_sign(1);
 
-    // Only simplify small numbers — safe zone
-    if (nsAbs.size() <= 15 && dsAbs.size() <= 15) {
-        long long n = std::stoll(ns);
-        long long d = std::stoll(ds);
+    // Compute GCD using our own implementation
+    UnlimitedInt* g = UnlimitedInt::gcd(&posNum, &posDen);
 
-        // Denominator always positive — move sign to numerator
-        if (d < 0) { n = -n; d = -d; }
-
-        // Euclidean GCD
-        long long a = (n < 0) ? -n : n;
-        long long b = d;
-        while (b != 0) {
-            long long t = b;
-            b = a % b;
-            a = t;
-        }
-        long long g = a;
-
-        if (g > 1) {
-            n = n / g;
-            d = d / g;
-        }
-
-        // Rebuild num and den from simplified values
+    // Only divide if GCD > 1
+    if (g->to_string() != "1") {
+        UnlimitedInt* newNum = UnlimitedInt::div(num, g);
+        UnlimitedInt* newDen = UnlimitedInt::div(den, g);
         delete num;
         delete den;
-        num = new UnlimitedInt((int)n);
-        den = new UnlimitedInt((int)d);
-        return;
+        num = newNum;
+        den = newDen;
     }
+    delete g;
 
-    // Case 4: large numbers — skip simplification for now
-    // Denominator positive check
+    // Denominator must always be positive
+    // If negative, flip signs of both num and den
     if (den->get_sign() == -1) {
         UnlimitedInt negOne(-1);
         UnlimitedInt* fn = UnlimitedInt::mul(num, &negOne);
         UnlimitedInt* fd = UnlimitedInt::mul(den, &negOne);
-        delete num; delete den;
-        num = fn; den = fd;
+        delete num;
+        delete den;
+        num = fn;
+        den = fd;
     }
 }
+
+   
+ 
+
+  
+        
 
 // ─── TO STRING ───────────────────────────────────────────────────────────────
 
